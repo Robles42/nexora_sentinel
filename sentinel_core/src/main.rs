@@ -1,48 +1,48 @@
-use argon2::{
-    password_hash::{
-        rand_core::OsRng,
-        PasswordHash, PasswordHasher, PasswordVerifier, SaltString
-    },
-    Argon2
-};
 use std::io::{self, Write};
+use std::process::Command;
+use std::fs;
 
 fn main() {
-    println!("🛡️ Nexora Sentinel: Zero-Trust Engine Active");
-    println!("📍 Mazatlán Node: [PROTECTED]");
-    println!("-----------------------------------------");
+    let mut attempts = 0;
+    let max_attempts = 3;
+    let master_key = "4268";
 
-    // 1. Simulación de una llave guardada (Hash)
-    // En un sistema real, esto vendría de tu nexora_db
-    let password = "4268"; 
-    let salt = SaltString::generate(&mut OsRng);
-    let argon2 = Argon2::default();
-    let password_hash = argon2.hash_password(password.as_bytes(), &salt)
-        .expect("Error hashing password")
-        .to_string();
+    println!("--- NEXORA PROTOCOL: ACTIVE DEFENSE MODE ---");
 
-    // 2. Interfaz de usuario
-    print!("🔑 Enter Master Access Key: ");
-    io::stdout().flush().unwrap();
-    
-    let mut input = String::new();
-    io::stdin().read_line(&mut input).expect("Failed to read");
-    let input = input.trim();
+    loop {
+        print!("Ingrese Credencial de Acceso: ");
+        io::stdout().flush().unwrap();
+        
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).unwrap();
+        let input = input.trim();
 
-    // 3. Verificación Real
-    println!("🔍 Verifying Zero-Trust Identity...");
-    
-    let parsed_hash = PasswordHash::new(&password_hash).expect("Invalid hash");
-    let result = Argon2::default().verify_password(input.as_bytes(), &parsed_hash);
-
-    match result {
-        Ok(_) => {
-            println!("✅ ACCESS GRANTED: Welcome, Robles.");
-            println!("🔓 Decrypting NexoraVault...");
-        },
-        Err(_) => {
-            println!("❌ ACCESS DENIED: Identity could not be verified.");
-            // Aquí podrías disparar tu Packet Sniffer o un log de alerta
+        if input == master_key {
+            println!("Acceso Concedido. Desencriptando modulos...");
+            break;
+        } else {
+            attempts += 1;
+            println!("Alerta: Credencial Invalida. Intento {} de {}", attempts, max_attempts);
+            
+            if attempts >= max_attempts {
+                println!("CRITICAL: Intento de intrusion detectado. Iniciando Protocolo de Autodestruccion...");
+                execute_self_destruct();
+                break;
+            }
         }
     }
+}
+
+fn execute_self_destruct() {
+    // Borrado de archivos sensibles (simulado para no romper tu proyecto real)
+    let targets = ["sentinel_core/proyecto_secreto.nvlt", "sentinel_core/vault.nvlt"];
+    
+    for target in targets.iter() {
+        if fs::metadata(target).is_ok() {
+            fs::remove_file(target).unwrap();
+            println!("Archivo {} eliminado de forma segura.", target);
+        }
+    }
+    println!("Protocolo Sentinel Finalizado. Sistema Bloqueado.");
+    std::process::exit(1);
 }
